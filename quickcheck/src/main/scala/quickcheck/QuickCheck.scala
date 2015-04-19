@@ -13,16 +13,6 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
     findMin(h) == a
   }
 
-  property("insert-delete") = forAll { a: A =>
-    isEmpty(deleteMin(insert(a, empty)))
-  }
-
-  property("min-of-meld-head") = forAll { (h1: H, h2: H) =>
-    val Min1 = findMin(h1)
-    val Min2 = findMin(h2)
-    findMin(meld(h1, h2)) == ord.min(Min1, Min2)
-  }
-
   property("hint1") = forAll { (a: A, b: A) =>
     val h1 = insert(a, empty)
     val h2 = insert(b, h1)
@@ -35,15 +25,6 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
     isEmpty(h2)
   }
 
-  property("hint3") = forAll { h: H =>
-    def rDeleteMin(h: H): Boolean = {
-      if(isEmpty(h)) true
-      else if (isEmpty(deleteMin(h))) true
-      else findMin(h) <= findMin(deleteMin(h)) && rDeleteMin(deleteMin(h))
-    }
-    rDeleteMin(h)
-  }
-
   property("hint4") = forAll { (h1: H, h2: H) =>
     val h = meld(h1, h2)
     findMin(h) == findMin(h1) || findMin(h) == findMin(h2)
@@ -54,8 +35,18 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
     findMin(insert(m, h))==m
   }
 
-  property("gen2") = forAll { (h: H) =>
-    meld(h, empty) == meld(empty, h)
+  property("gen1") = forAll { l: List[Int] =>
+    toList(toHeap(l)) == l.sorted
+  }
+
+  def toList(h: H): List[Int] = {
+    if (isEmpty(h)) Nil
+    else findMin(h) :: toList(deleteMin(h))
+  }
+
+  def toHeap(l: List[Int]): H = l match {
+    case Nil => empty
+    case x::xs => insert(x,toHeap(xs))
   }
 
   lazy val genHeap: Gen[H] = for {
